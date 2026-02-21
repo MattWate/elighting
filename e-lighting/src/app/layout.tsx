@@ -1,14 +1,17 @@
 // e-lighting/src/app/layout.tsx
 import '@/styles/globals.css';
+import Navbar from '@/components/shared/Navbar';
+import { Inter } from 'next/font/google';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const inter = Inter({ subsets: ['latin'] });
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${inter.className} bg-[#0a0a0a]`}>
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }
