@@ -1,14 +1,19 @@
 // e-lighting/src/components/ui/ProductCard.tsx
 export default function ProductCard({ product }: { product: any }) {
   return (
-    <div className="border p-4 rounded-lg shadow-sm">
-      <img 
-        src={product.images?.[0] || '/placeholder.jpg'} 
-        alt={product.name} 
-        className="w-full h-64 object-cover mb-4" 
-      />
-      <h3 className="font-bold">{product.name}</h3>
-      <p className="text-orange-600">${product.price}</p>
+    <div className="group relative bg-[#111] border border-zinc-800 p-4 rounded-sm transition-all hover:border-zinc-500">
+      <div className="overflow-hidden bg-zinc-900 aspect-square mb-4">
+        <img 
+          src={product.images?.[0] || '/placeholder.jpg'} 
+          alt={product.name} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+        />
+      </div>
+      <h3 className="text-sm uppercase tracking-widest font-bold text-zinc-200">{product.name}</h3>
+      <div className="flex justify-between items-center mt-2">
+        <p className="text-zinc-500 text-sm font-mono">${product.price}</p>
+        <span className="text-[10px] text-zinc-600 uppercase">View Details</span>
+      </div>
     </div>
   );
 }
