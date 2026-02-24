@@ -25,7 +25,7 @@ export default function Navbar() {
         </div>
 
         <Link 
-          href="/admin/dashboard" 
+          href="/dashboard" 
           className="text-xs border border-zinc-700 px-3 py-1 rounded-full hover:bg-white hover:text-black transition-all"
         >
           Admin Portal
@@ -34,3 +34,4 @@ export default function Navbar() {
     </nav>
   );
 }
+
