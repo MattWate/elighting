@@ -47,8 +47,10 @@ export default async function HomePage() {
             <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-[0.3em] mb-4">Our Journey</h2>
             <h3 className="text-3xl font-bold uppercase tracking-tighter text-white mb-6">Founded with a vision to illuminate lives.</h3>
             <p className="text-zinc-400 leading-relaxed font-light">
-              Founded in 2011, eLighting brought together engineers to address the need for eco-friendly alternatives. 
-              We are dedicated to transforming how Southern Africa lights its surroundings through cutting-edge technology.
+              Mission Statement
+            Our mission is to redefine the way South Africans experience illumination. Guided by innovation, sustainability, and unwavering quality,
+            we strive to be a leading force in the lighting industry, inspiring positive change and enhancing lives through
+              our cutting-edge locally manufactured LED lighting solutions
             </p>
           </div>
           <div className="space-y-8">
@@ -100,3 +102,4 @@ export default async function HomePage() {
     </main>
   );
 }
+
