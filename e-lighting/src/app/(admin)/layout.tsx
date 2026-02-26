@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link'; // <--- ADD THIS IMPORT
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<any>(null);
@@ -27,11 +28,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans">
       <div className="flex">
-        {/* Only show sidebar if logged in and not on login page */}
         {session && pathname !== '/login' && (
           <aside className="w-64 border-r border-zinc-800 min-h-screen p-6 hidden md:block">
             <div className="mb-10 px-2 text-xs font-mono text-zinc-500 uppercase tracking-widest">Control Center</div>
-           <nav className="space-y-2 text-sm">
+            <nav className="space-y-2 text-sm">
               <Link href="/dashboard" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
                 Dashboard
               </Link>
