@@ -1,4 +1,3 @@
-// src/app/(admin)/dashboard/manage-products/page.tsx
 "use client";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -7,6 +6,7 @@ import AddProductForm from '@/components/admin/AddProductForm';
 export default function ManageProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -24,36 +24,48 @@ export default function ManageProductsPage() {
     <main className="p-12 max-w-7xl mx-auto">
       <header className="flex justify-between items-end mb-16 border-b border-zinc-800 pb-8">
         <div>
-          <h1 className="text-5xl font-bold uppercase tracking-tighter">Inventory</h1>
+          <h1 className="text-5xl font-bold uppercase tracking-tighter text-white">Inventory</h1>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mt-2">Active Catalogue Control</p>
         </div>
         <button 
-          onClick={() => setIsAdding(!isAdding)}
+          onClick={() => {
+            setIsAdding(!isAdding);
+            setEditingProduct(null);
+          }}
           className={`px-8 py-3 font-bold text-[10px] uppercase tracking-widest transition-all ${
-            isAdding ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-white text-black hover:bg-zinc-200'
+            isAdding || editingProduct ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-white text-black hover:bg-zinc-200'
           }`}
         >
-          {isAdding ? 'Cancel Entry' : 'Add New Unit'}
+          {isAdding || editingProduct ? 'Cancel Action' : 'Add New Unit'}
         </button>
       </header>
 
-      {isAdding ? (
-        <AddProductForm onComplete={() => {
-          setIsAdding(false);
-          fetchProducts();
-        }} />
+      {isAdding || editingProduct ? (
+        <AddProductForm 
+          productToEdit={editingProduct}
+          onComplete={() => {
+            setIsAdding(false);
+            setEditingProduct(null);
+            fetchProducts();
+          }} 
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {products.map((p) => (
             <div key={p.id} className="group p-6 border border-zinc-900 bg-[#0c0c0c] hover:border-zinc-700 transition-all flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-bold uppercase tracking-tight">{p.name}</h3>
+                <h3 className="text-lg font-bold uppercase tracking-tight text-white">{p.name}</h3>
                 <p className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest mt-1">
                   {p.categories?.name} — ${p.price}
                 </p>
               </div>
               <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="text-zinc-500 hover:text-white text-[10px] uppercase font-bold tracking-widest">Edit</button>
+                <button 
+                  onClick={() => setEditingProduct(p)}
+                  className="text-zinc-500 hover:text-white text-[10px] uppercase font-bold tracking-widest"
+                >
+                  Edit
+                </button>
                 <button className="text-red-900 hover:text-red-500 text-[10px] uppercase font-bold tracking-widest">Delete</button>
               </div>
             </div>
