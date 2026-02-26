@@ -31,9 +31,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {session && pathname !== '/login' && (
           <aside className="w-64 border-r border-zinc-800 min-h-screen p-6 hidden md:block">
             <div className="mb-10 px-2 text-xs font-mono text-zinc-500 uppercase tracking-widest">Control Center</div>
-            <nav className="space-y-2 text-sm">
-              <a href="/dashboard" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">Dashboard</a>
-              <a href="/dashboard/manage-products" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">Inventory</a>
+           <nav className="space-y-2 text-sm">
+              <Link href="/dashboard" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
+                Dashboard
+              </Link>
+              <Link href="/dashboard/manage-products" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
+                Inventory
+              </Link>
               <button 
                 onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
                 className="w-full text-left px-4 py-2 text-red-900 hover:text-red-500 transition-colors mt-10 uppercase text-[10px] font-bold tracking-widest"
