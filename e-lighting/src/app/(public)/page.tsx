@@ -47,10 +47,7 @@ export default async function HomePage() {
             <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-[0.3em] mb-4">Our Journey</h2>
             <h3 className="text-3xl font-bold uppercase tracking-tighter text-white mb-6">Founded with a vision to illuminate lives.</h3>
             <p className="text-zinc-400 leading-relaxed font-light">
-              Mission Statement
-            Our mission is to redefine the way South Africans experience illumination. Guided by innovation, sustainability, and unwavering quality,
-            we strive to be a leading force in the lighting industry, inspiring positive change and enhancing lives through
-              our cutting-edge locally manufactured LED lighting solutions
+             Excellence, in our opinion, is the basis for success. Our team of highly qualified experts is committed to providing LED lighting solutions that raise the bar for quality. Every stage of our process, from design and production to testing and distribution, is permeated with a dedication to accuracy and toughness. To ensure that they meet and surpass industry standards, our products go through stringent quality control procedures. As a consequence, the lighting solutions we provide are dependable, effective, and long-lasting.
             </p>
           </div>
           <div className="space-y-8">
@@ -102,4 +99,5 @@ export default async function HomePage() {
     </main>
   );
 }
+
 
