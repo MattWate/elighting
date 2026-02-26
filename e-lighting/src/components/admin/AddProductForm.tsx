@@ -3,20 +3,24 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import ImageUploader from './ImageUploader';
 
-export default function AddProductForm({ onComplete }: { onComplete: () => void }) {
+interface AddProductFormProps {
+  onComplete: () => void;
+  productToEdit?: any;
+}
+
+export default function AddProductForm({ onComplete, productToEdit }: AddProductFormProps) {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // Form State aligned with your Database Types 
   const [formData, setFormData] = useState({
-    name: '',
-    category_id: '',
-    price: 0,
-    description: '',
-    data_sheet_url: '',
-    is_featured: false, // For homepage spotlight [cite: 10]
-    images: [] as string[],
-    specs: {} as any
+    name: productToEdit?.name || '',
+    category_id: productToEdit?.category_id || '',
+    price: productToEdit?.price || 0,
+    description: productToEdit?.description || '',
+    data_sheet_url: productToEdit?.data_sheet_url || '',
+    is_featured: productToEdit?.is_featured || false,
+    images: productToEdit?.images || [] as string[],
+    specs: productToEdit?.specs || {} as any
   });
 
   useEffect(() => {
@@ -31,17 +35,28 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
     e.preventDefault();
     setLoading(true);
     
-    // Auto-generate URL-friendly slug 
     const slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
     
-    const { error } = await supabase.from('products').insert([
-      { ...formData, slug }
-    ]);
+    const productData = { ...formData, slug };
+
+    let error;
+    if (productToEdit) {
+      const { error: updateError } = await supabase
+        .from('products')
+        .update(productData)
+        .eq('id', productToEdit.id);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from('products')
+        .insert([productData]);
+      error = insertError;
+    }
 
     if (error) {
       alert(`Database Error: ${error.message}`);
     } else {
-      alert("Product successfully committed to inventory.");
+      alert(productToEdit ? "Product successfully updated." : "Product added to inventory.");
       onComplete();
     }
     setLoading(false);
@@ -50,8 +65,6 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 bg-[#0f0f0f] p-8 border border-zinc-800 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        
-        {/* Left Column: Identification */}
         <div className="space-y-6">
           <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] border-b border-zinc-900 pb-2">Identification</h3>
           
@@ -59,6 +72,7 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
             <label className="block text-zinc-400 text-xs uppercase mb-2">Model Name</label>
             <input 
               required 
+              value={formData.name}
               placeholder="e.g. Titan LED Modular"
               className="w-full bg-black border border-zinc-800 p-4 text-white focus:border-zinc-500 outline-none transition-all font-mono"
               onChange={(e) => setFormData({...formData, name: e.target.value})} 
@@ -69,7 +83,8 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
             <label className="block text-zinc-400 text-xs uppercase mb-2">Category Assignment</label>
             <select 
               required 
-              className="w-full bg-black border border-zinc-800 p-4 text-white focus:border-zinc-500 outline-none appearance-none cursor-pointer"
+              value={formData.category_id}
+              className="w-full bg-black border border-zinc-800 p-4 text-white focus:border-zinc-500 outline-none cursor-pointer"
               onChange={(e) => setFormData({...formData, category_id: e.target.value})}
             >
               <option value="">Select Category...</option>
@@ -82,16 +97,17 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
             <input 
               type="number" 
               step="0.01" 
+              value={formData.price}
               className="w-full bg-black border border-zinc-800 p-4 text-white font-mono"
               onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} 
             />
           </div>
 
-          {/* Featured Toggle [cite: 10] */}
           <div className="flex items-center gap-3 p-4 border border-zinc-900 bg-black">
             <input 
               type="checkbox" 
               id="featured"
+              checked={formData.is_featured}
               className="w-4 h-4 accent-white cursor-pointer"
               onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
             />
@@ -101,20 +117,23 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
           </div>
         </div>
 
-        {/* Right Column: Technical Assets */}
         <div className="space-y-6">
           <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] border-b border-zinc-900 pb-2">Technical Assets</h3>
           
-          <label className="block text-zinc-400 text-xs uppercase">Specification Sheet (PDF) [cite: 18]</label>
-          <ImageUploader 
-            bucket="product-assets" 
-            onUploadComplete={(url) => setFormData({...formData, data_sheet_url: url})} 
-          />
+          <label className="block text-zinc-400 text-xs uppercase">Specification Sheet (PDF)</label>
+          <div className="space-y-2">
+            <ImageUploader 
+              bucket="product-assets" 
+              onUploadComplete={(url) => setFormData({...formData, data_sheet_url: url})} 
+            />
+            {formData.data_sheet_url && <p className="text-[9px] text-green-500 font-mono truncate">CURRENT FILE: {formData.data_sheet_url}</p>}
+          </div>
           
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Unit Description</label>
             <textarea 
               rows={5} 
+              value={formData.description}
               placeholder="Enter technical value proposition..."
               className="w-full bg-black border border-zinc-800 p-4 text-white focus:border-zinc-500 outline-none resize-none leading-relaxed"
               onChange={(e) => setFormData({...formData, description: e.target.value})} 
@@ -127,7 +146,7 @@ export default function AddProductForm({ onComplete }: { onComplete: () => void 
         disabled={loading} 
         className="w-full bg-white text-black font-black py-5 uppercase tracking-[0.3em] text-xs hover:bg-zinc-300 transition-all disabled:opacity-20 flex justify-center items-center gap-2"
       >
-        {loading ? 'COMMITTING DATA...' : 'DEPLOY PRODUCT TO LIVE SITE'}
+        {loading ? 'PROCESSING...' : productToEdit ? 'UPDATE UNIT DATA' : 'DEPLOY PRODUCT TO LIVE SITE'}
       </button>
     </form>
   );
