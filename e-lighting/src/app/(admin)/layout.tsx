@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link'; // <--- ADD THIS IMPORT
+import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<any>(null);
@@ -37,6 +37,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
               <Link href="/dashboard/manage-products" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
                 Inventory
+              </Link>
+              {/* Added Categories Link */}
+              <Link href="/dashboard/categories" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
+                Categories
               </Link>
               <button 
                 onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
