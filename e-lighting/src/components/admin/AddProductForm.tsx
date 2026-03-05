@@ -19,7 +19,7 @@ export default function AddProductForm({ onComplete, productToEdit }: AddProduct
     description: productToEdit?.description || '',
     data_sheet_url: productToEdit?.data_sheet_url || '',
     is_featured: productToEdit?.is_featured || false,
-    images: productToEdit?.images || [] as string[],
+    images: productToEdit?.images || [] as string[], // Already in schema
     specs: productToEdit?.specs || {} as any
   });
 
@@ -36,7 +36,6 @@ export default function AddProductForm({ onComplete, productToEdit }: AddProduct
     setLoading(true);
     
     const slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    
     const productData = { ...formData, slug };
 
     let error;
@@ -73,7 +72,6 @@ export default function AddProductForm({ onComplete, productToEdit }: AddProduct
             <input 
               required 
               value={formData.name}
-              placeholder="e.g. Titan LED Modular"
               className="w-full bg-black border border-zinc-800 p-4 text-white focus:border-zinc-500 outline-none transition-all font-mono"
               onChange={(e) => setFormData({...formData, name: e.target.value})} 
             />
@@ -117,24 +115,39 @@ export default function AddProductForm({ onComplete, productToEdit }: AddProduct
           </div>
         </div>
 
+        {/* Assets Section */}
         <div className="space-y-6">
-          <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] border-b border-zinc-900 pb-2">Technical Assets</h3>
+          <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] border-b border-zinc-900 pb-2">Visuals & Data</h3>
           
-          <label className="block text-zinc-400 text-xs uppercase">Specification Sheet (PDF)</label>
-          <div className="space-y-2">
+          {/* PRODUCT IMAGE UPLOAD */}
+          <div>
+            <label className="block text-zinc-400 text-xs uppercase mb-2">Primary Product Image</label>
+            <ImageUploader 
+              bucket="product-assets" 
+              onUploadComplete={(url) => setFormData({...formData, images: [url]})} 
+            />
+            {formData.images.length > 0 && (
+              <div className="mt-2 relative w-20 h-20 border border-zinc-800">
+                <img src={formData.images[0]} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+
+          {/* DATA SHEET UPLOAD */}
+          <div>
+            <label className="block text-zinc-400 text-xs uppercase mb-2">Specification Sheet (PDF)</label>
             <ImageUploader 
               bucket="product-assets" 
               onUploadComplete={(url) => setFormData({...formData, data_sheet_url: url})} 
             />
-            {formData.data_sheet_url && <p className="text-[9px] text-green-500 font-mono truncate">CURRENT FILE: {formData.data_sheet_url}</p>}
+            {formData.data_sheet_url && <p className="text-[9px] text-green-500 font-mono truncate mt-1">PDF LINKED</p>}
           </div>
           
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Unit Description</label>
             <textarea 
-              rows={5} 
+              rows={3} 
               value={formData.description}
-              placeholder="Enter technical value proposition..."
               className="w-full bg-black border border-zinc-800 p-4 text-white focus:border-zinc-500 outline-none resize-none leading-relaxed"
               onChange={(e) => setFormData({...formData, description: e.target.value})} 
             />
