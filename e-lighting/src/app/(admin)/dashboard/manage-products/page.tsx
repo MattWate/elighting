@@ -20,6 +20,24 @@ export default function ManageProductsPage() {
     if (data) setProducts(data);
   }
 
+  // New Delete Logic
+  async function handleDelete(id: string, name: string) {
+    const confirmed = window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`);
+    
+    if (confirmed) {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert(`Error deleting product: ${error.message}`);
+      } else {
+        fetchProducts();
+      }
+    }
+  }
+
   return (
     <main className="p-12 max-w-7xl mx-auto">
       <header className="flex justify-between items-end mb-16 border-b border-zinc-800 pb-8">
@@ -66,7 +84,12 @@ export default function ManageProductsPage() {
                 >
                   Edit
                 </button>
-                <button className="text-red-900 hover:text-red-500 text-[10px] uppercase font-bold tracking-widest">Delete</button>
+                <button 
+                  onClick={() => handleDelete(p.id, p.name)} // Trigger Delete
+                  className="text-red-900 hover:text-red-500 text-[10px] uppercase font-bold tracking-widest"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
