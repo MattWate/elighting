@@ -12,7 +12,7 @@ export default async function CataloguePage() {
     <main className="max-w-7xl mx-auto px-6 py-12">
       <header className="mb-12 border-l-4 border-zinc-500 pl-6">
         <h1 className="text-4xl font-bold uppercase tracking-tighter text-white">Product Catalogue</h1>
-        <p className="text-zinc-500 mt-2 font-mono text-sm">Browse industrial solutions.</p>
+        <p className="text-zinc-500 mt-2 font-mono text-sm">Browse our industrial lighting solutions by category.</p>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -20,7 +20,7 @@ export default async function CataloguePage() {
           <Link 
             key={category.id} 
             href={`/products/category/${category.slug}`}
-            className="group relative block h-64 overflow-hidden border border-zinc-800 bg-[#111]"
+            className="group relative block h-80 overflow-hidden border border-zinc-800 bg-[#111]"
           >
             {/* Background Image */}
             {category.image_url && (
@@ -30,10 +30,17 @@ export default async function CataloguePage() {
               />
             )}
             
-            <div className="relative h-full p-8 flex flex-col justify-end bg-gradient-to-t from-black to-transparent">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white uppercase tracking-tight">{category.name}</h2>
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[10px] uppercase">View</span>
+            <div className="relative h-full p-8 flex flex-col justify-end bg-gradient-to-t from-black via-black/40 to-transparent">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-white uppercase tracking-tight">{category.name}</h2>
+                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity font-mono text-[10px] uppercase">View</span>
+                </div>
+                
+                {/* Added Description Field */}
+                <p className="text-zinc-400 text-xs font-mono uppercase tracking-wider line-clamp-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                  {category.description || `High-performance ${category.name} solutions.`}
+                </p>
               </div>
             </div>
           </Link>
