@@ -3,6 +3,9 @@ import { supabase } from '@/lib/supabase';
 import ProductCard from '@/components/ui/ProductCard';
 import Link from 'next/link';
 
+// This line ensures the page always shows current database data
+export const revalidate = 0; 
+
 export default async function HomePage() {
   const { data: featuredProducts } = await supabase
     .from('products')
@@ -81,6 +84,10 @@ export default async function HomePage() {
           {featuredProducts?.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
+          {/* Added empty state check */}
+          {(!featuredProducts || featuredProducts.length === 0) && (
+             <p className="text-zinc-600 font-mono text-xs uppercase">No featured units selected.</p>
+          )}
         </div>
       </section>
 
