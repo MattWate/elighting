@@ -11,14 +11,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
     .from('products')
     .select('*, categories(name, slug)')
     .eq('slug', params.slug)
-    .single();/page.tsx]
+    .single();
 
   if (!product) notFound();
 
   return (
     <main className="min-h-screen bg-zinc-100 px-4 md:px-6 py-8 md:py-12">
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumbs - Updated for light theme */}
         <nav className="hidden sm:flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-8 md:mb-12">
           <Link href="/products" className="hover:text-zinc-900 transition-colors">Catalogue</Link>
           <ChevronRight size={10} />
@@ -30,7 +29,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-          {/* Product Image - Added white border and shadow */}
           <div className="w-full aspect-square bg-white border border-zinc-300 shadow-sm relative overflow-hidden">
             <img 
               src={product.images?.[0] || '/hero-industrial.jpg'} 
@@ -39,7 +37,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
             />
           </div>
 
-          {/* Product Details - Updated typography to dark zinc */}
           <div className="flex flex-col">
             <h1 className="text-3xl md:text-5xl font-bold uppercase tracking-tighter mb-4 text-zinc-900">{product.name}</h1>
             <p className="text-zinc-600 font-mono text-xs md:text-sm mb-8 leading-relaxed max-w-lg">
@@ -57,7 +54,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
               </div>
             </div>
 
-            {/* Technical Specifications - Dark borders on light background */}
             <div className="border-t border-zinc-300 pt-8 mb-10">
               <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-6">Technical Specifications</h2>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
