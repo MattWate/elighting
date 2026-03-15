@@ -74,7 +74,7 @@ export default function ManageProductsPage() {
               <div>
                 <h3 className="text-lg font-bold uppercase tracking-tight text-white">{p.name}</h3>
                 <p className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest mt-1">
-                  {p.categories?.name} — ${p.price}
+                  {p.categories?.name} — Specs Only Mode
                 </p>
               </div>
               <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -85,7 +85,7 @@ export default function ManageProductsPage() {
                   Edit
                 </button>
                 <button 
-                  onClick={() => handleDelete(p.id, p.name)} // Trigger Delete
+                  onClick={() => handleDelete(p.id, p.name)}
                   className="text-red-900 hover:text-red-500 text-[10px] uppercase font-bold tracking-widest"
                 >
                   Delete
