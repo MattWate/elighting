@@ -27,6 +27,7 @@ export default function Navbar() {
         {/* Desktop Links - Changed from text-[10px] to text-sm */}
         <div className="hidden md:flex gap-10 text-sm font-bold uppercase tracking-widest text-zinc-300">
           <Link href="/products" className="hover:text-white transition-colors">Catalogue</Link>
+          <Link href="/applications">Applications</Link>
           <Link href="/about" className="hover:text-white transition-colors">Our Story</Link>
           <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
         </div>
