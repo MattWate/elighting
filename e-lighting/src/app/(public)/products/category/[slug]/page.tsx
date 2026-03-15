@@ -9,14 +9,14 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     .from('categories')
     .select('id, name, description')
     .eq('slug', params.slug)
-    .single();/page.tsx]
+    .single();
 
   if (!category) return <div className="p-20 text-center bg-zinc-100 text-zinc-900">Category not found.</div>;
 
   const { data: products } = await supabase
     .from('products')
     .select('*')
-    .eq('category_id', category.id);/page.tsx]
+    .eq('category_id', category.id);
 
   return (
     <main className="min-h-screen bg-zinc-100 px-6 py-12">
