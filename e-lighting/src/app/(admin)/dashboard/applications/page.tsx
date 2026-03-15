@@ -1,72 +1,56 @@
-"use client";
-import { useEffect, useState } from 'react';
+// src/app/(public)/applications/page.tsx
 import { supabase } from '@/lib/supabase';
-import { Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
-export default function ApplicationProductManager({ appId }: { appId: string }) {
-  const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
-  const [selectedProductId, setSelectedProductId] = useState('');
+export const revalidate = 0;
 
-  useEffect(() => {
-    fetchData();
-  }, [appId]);
-
-  async function fetchData() {
-    // Get all products for the dropdown
-    const { data: products } = await supabase.from('products').select('id, name');
-    if (products) setAllProducts(products);
-
-    // Get currently linked products
-    const { data: linked } = await supabase
-      .from('application_products')
-      .select('product_id, products(name)')
-      .eq('application_id', appId);
-    if (linked) setRelatedProducts(linked);
-  }
-
-  async function linkProduct() {
-    if (!selectedProductId) return;
-    await supabase.from('application_products').insert([{ 
-      application_id: appId, 
-      product_id: selectedProductId 
-    }]);
-    fetchData();
-  }
-
-  async function unlinkProduct(productId: string) {
-    await supabase.from('application_products')
-      .delete()
-      .eq('application_id', appId)
-      .eq('product_id', productId);
-    fetchData();
-  }
+export default async function ApplicationsPage() {
+  const { data: apps } = await supabase
+    .from('applications')
+    .select('*')
+    .order('created_at', { ascending: true });
 
   return (
-    <div className="mt-8 pt-8 border-t border-zinc-800">
-      <h3 className="text-white font-bold uppercase text-xs mb-4">Linked Products</h3>
-      <div className="flex gap-4 mb-6">
-        <select 
-          className="flex-1 bg-black border border-zinc-800 p-3 text-white text-sm"
-          value={selectedProductId}
-          onChange={(e) => setSelectedProductId(e.target.value)}
-        >
-          <option value="">Select a product to link...</option>
-          {allProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-        <button onClick={linkProduct} className="bg-white text-black px-6 font-bold uppercase text-xs">Link</button>
-      </div>
+    <main className="min-h-screen bg-zinc-100 px-6 py-20">
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-16 border-l-4 border-zinc-900 pl-8">
+          <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-tighter text-zinc-900">
+            Applications
+          </h1>
+          <p className="text-zinc-500 font-mono text-sm mt-4 uppercase tracking-[0.2em]">
+            Versatile Lighting Solutions
+          </p>
+        </header>
 
-      <div className="space-y-2">
-        {relatedProducts.map((rp: any) => (
-          <div key={rp.product_id} className="flex justify-between bg-zinc-900/50 p-3 border border-zinc-800">
-            <span className="text-sm text-zinc-300">{rp.products.name}</span>
-            <button onClick={() => unlinkProduct(rp.product_id)} className="text-red-500 hover:text-red-400">
-              <Trash2 size={14} />
-            </button>
-          </div>
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {apps?.map((app) => (
+            <Link 
+              key={app.id} 
+              href={`/applications/${app.id}`}
+              className="relative h-[400px] bg-black group overflow-hidden border border-zinc-300 shadow-sm"
+            >
+              {app.image_url && (
+                <img 
+                  src={app.image_url} 
+                  className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-all duration-700 group-hover:scale-105" 
+                  alt={app.title}
+                />
+              )}
+              <div className="relative h-full p-12 flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent">
+                <h2 className="text-3xl font-bold uppercase tracking-tighter text-white mb-4">
+                  {app.title}
+                </h2>
+                <p className="text-zinc-300 font-mono text-sm leading-relaxed max-w-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 opacity-0 group-hover:opacity-100">
+                  {app.description}
+                </p>
+                <span className="mt-6 text-[10px] font-bold uppercase tracking-widest text-white border-b border-white w-fit opacity-0 group-hover:opacity-100 transition-opacity">
+                  View Case Study
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
