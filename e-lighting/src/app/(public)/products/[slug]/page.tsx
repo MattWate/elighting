@@ -43,14 +43,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
               {product.description}
             </p>
 
-            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-10">
-              <div className="p-4 border border-zinc-200 bg-white shadow-sm">
-                <span className="block text-[9px] text-zinc-500 uppercase mb-1 font-bold">Standard Price</span>
-                <span className="text-lg md:text-xl font-bold text-zinc-900">${product.price}</span>
-              </div>
+            <div className="grid grid-cols-1 mb-10">
               <div className="p-4 border border-zinc-200 bg-white shadow-sm">
                 <span className="block text-[9px] text-zinc-500 uppercase mb-1 font-bold">Stock Status</span>
-                <span className="text-lg md:text-xl font-bold text-green-600">Available</span>
+                <span className="text-lg md:text-xl font-bold text-green-600">Available For Quote</span>
               </div>
             </div>
 
