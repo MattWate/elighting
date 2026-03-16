@@ -13,7 +13,7 @@ export default function ContactPage() {
     const formData = new FormData(e.currentTarget);
     
     try {
-      // Netlify Form Submission Standard
+      // Netlify Form Submission logic for AJAX/Next.js
       await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -21,7 +21,7 @@ export default function ContactPage() {
       });
       setSubmitted(true);
     } catch (error) {
-      alert("There was an error transmitting your enquiry. Please try again.");
+      alert("Transmission failed. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -30,12 +30,12 @@ export default function ContactPage() {
   if (submitted) {
     return (
       <main className="min-h-[70vh] bg-zinc-100 flex flex-col items-center justify-center text-center px-6">
-        <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mb-6">
-          <Send className="text-white" size={32} />
+        <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mb-6 text-white">
+          <Send size={32} />
         </div>
         <h1 className="text-4xl font-bold uppercase tracking-tighter mb-4 text-zinc-900">Transmission Received</h1>
         <p className="text-zinc-500 font-mono text-sm uppercase tracking-widest max-w-md">
-          Our technical team will review your enquiry and respond within 24 business hours.
+          Our technical team will review your enquiry and respond shortly.
         </p>
       </main>
     );
@@ -45,19 +45,17 @@ export default function ContactPage() {
     <main className="min-h-screen bg-zinc-100 px-6 py-16 md:py-24">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24">
         
-        {/* Company Details Section */}
+        {/* Contact Details & Operating Hours */}
         <div className="space-y-12">
           <div>
             <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-tighter mb-8 text-zinc-900">
               Connect <br /> <span className="text-zinc-400">With Us</span>
             </h1>
-            <p className="text-zinc-600 text-lg mb-12 leading-relaxed max-w-md font-light">
-              For technical specifications, project quotes, or distribution enquiries, reach out to our headquarters.
-            </p>
           </div>
 
           <div className="space-y-8 font-mono text-xs md:text-sm uppercase tracking-widest">
-            <a href="tel:0114523964" className="flex items-center gap-6 group hover:text-zinc-900 transition-colors">
+            {/* Clickable Phone Number */}
+            <a href="tel:0114523964" className="flex items-center gap-6 group">
               <div className="w-12 h-12 border border-zinc-300 bg-white flex items-center justify-center text-zinc-400 group-hover:border-zinc-900 group-hover:text-zinc-900 transition-all">
                 <Phone size={20} />
               </div>
@@ -67,29 +65,32 @@ export default function ContactPage() {
               </div>
             </a>
 
-            <a href="mailto:info@elighting.co.za" className="flex items-center gap-6 group hover:text-zinc-900 transition-colors">
+            {/* Clickable Email */}
+            <a href="mailto:info@elighting.co.za" className="flex items-center gap-6 group">
               <div className="w-12 h-12 border border-zinc-300 bg-white flex items-center justify-center text-zinc-400 group-hover:border-zinc-900 group-hover:text-zinc-900 transition-all">
                 <Mail size={20} />
               </div>
               <div>
-                <span className="block text-zinc-400 text-[10px] mb-1">Electronic Mail</span>
+                <span className="block text-zinc-400 text-[10px] mb-1">Email</span>
                 <span className="text-zinc-900 font-bold underline decoration-zinc-300">info@elighting.co.za</span>
               </div>
             </a>
 
-            <a href="https://maps.google.com/?q=51+Brunton+Street+Founders+Hill+Edenvale" target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 group hover:text-zinc-900 transition-colors">
+            {/* Map Link */}
+            <a href="https://www.google.com/maps/search/?api=1&query=51+Brunton+Street+Founders+Hill+Edenvale" target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 group">
               <div className="w-12 h-12 border border-zinc-300 bg-white flex items-center justify-center text-zinc-400 group-hover:border-zinc-900 group-hover:text-zinc-900 transition-all">
                 <MapPin size={20} />
               </div>
               <div>
                 <span className="block text-zinc-400 text-[10px] mb-1">HQ Location</span>
                 <span className="text-zinc-900 font-bold leading-normal">51 Brunton Street, Founders Hill, <br /> Edenvale, South Africa</span>
-                <span className="flex items-center gap-1 text-[8px] mt-2 text-zinc-400 group-hover:text-zinc-900">
-                  <ExternalLink size={10} /> Open in Google Maps
+                <span className="flex items-center gap-1 text-[8px] mt-2 text-zinc-400 group-hover:text-zinc-900 uppercase">
+                  <ExternalLink size={10} /> View Map
                 </span>
               </div>
             </a>
 
+            {/* Trading Hours */}
             <div className="flex items-start gap-6 pt-4">
               <div className="w-12 h-12 border border-zinc-300 bg-white flex items-center justify-center text-zinc-400">
                 <Clock size={20} />
@@ -106,10 +107,8 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Netlify Auto-Detected Enquiry Form */}
+        {/* Netlify Standard Format Form */}
         <div className="bg-white border border-zinc-200 p-8 md:p-12 shadow-sm">
-          <h2 className="text-zinc-900 font-bold uppercase text-xs tracking-widest mb-8 border-b border-zinc-100 pb-4">New Project Enquiry</h2>
-          
           <form 
             name="contact" 
             method="POST" 
@@ -117,45 +116,51 @@ export default function ContactPage() {
             onSubmit={handleSubmit} 
             className="space-y-6"
           >
-            {/* Netlify hidden input for form detection */}
+            {/* Hidden field for Netlify form-name matching */}
             <input type="hidden" name="form-name" value="contact" />
             
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono text-zinc-400 tracking-widest font-bold">Full Name</label>
-              <input 
-                name="full-name" 
-                required 
-                className="w-full bg-zinc-50 border border-zinc-200 p-4 text-zinc-900 focus:border-zinc-900 outline-none transition-all" 
-              />
-            </div>
+            <p className="space-y-2">
+              <label className="text-[10px] uppercase font-mono text-zinc-400 tracking-widest font-bold block">
+                Name <input 
+                  type="text" 
+                  name="name" 
+                  required 
+                  className="w-full bg-zinc-50 border border-zinc-200 p-4 mt-2 text-zinc-900 focus:border-zinc-900 outline-none transition-all" 
+                />
+              </label>
+            </p>
             
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono text-zinc-400 tracking-widest font-bold">Email Address</label>
-              <input 
-                name="email" 
-                type="email" 
-                required 
-                className="w-full bg-zinc-50 border border-zinc-200 p-4 text-zinc-900 focus:border-zinc-900 outline-none transition-all" 
-              />
-            </div>
+            <p className="space-y-2">
+              <label className="text-[10px] uppercase font-mono text-zinc-400 tracking-widest font-bold block">
+                Email <input 
+                  type="email" 
+                  name="email" 
+                  required 
+                  className="w-full bg-zinc-50 border border-zinc-200 p-4 mt-2 text-zinc-900 focus:border-zinc-900 outline-none transition-all" 
+                />
+              </label>
+            </p>
 
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono text-zinc-400 tracking-widest font-bold">Message</label>
-              <textarea 
-                name="message" 
-                required 
-                rows={5} 
-                className="w-full bg-zinc-50 border border-zinc-200 p-4 text-zinc-900 focus:border-zinc-900 outline-none transition-all resize-none" 
-              />
-            </div>
+            <p className="space-y-2">
+              <label className="text-[10px] uppercase font-mono text-zinc-400 tracking-widest font-bold block">
+                Enquiry <textarea 
+                  name="message" 
+                  required 
+                  rows={5} 
+                  className="w-full bg-zinc-50 border border-zinc-200 p-4 mt-2 text-zinc-900 focus:border-zinc-900 outline-none transition-all resize-none" 
+                />
+              </label>
+            </p>
 
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full bg-zinc-900 text-white py-5 font-bold uppercase text-xs tracking-[0.3em] hover:bg-black transition-all disabled:opacity-50"
-            >
-              {loading ? 'TRANSMITTING...' : 'SEND ENQUIRY'}
-            </button>
+            <p>
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full bg-zinc-900 text-white py-5 font-bold uppercase text-xs tracking-[0.3em] hover:bg-black transition-all disabled:opacity-50"
+              >
+                {loading ? 'SENDING...' : 'SEND'}
+              </button>
+            </p>
           </form>
         </div>
       </div>
