@@ -4,5 +4,3 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-  # Use pinned_version to specify the stable v4 runtime
-  pinned_version = "4.41.3"
