@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Clock, ExternalLink } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -11,73 +11,63 @@ export default function ContactPage() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    // Add the form name manually to the data being sent
-    formData.append("form-name", "contact");
+    const payload = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      message: formData.get('message') as string,
+    };
 
-    try {
-      await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(formData as any).toString(),
-      });
-      setSubmitted(true);
-    } catch (error) {
-      alert("Submission failed. Please try again.");
-    } finally {
+    // 1. Save to Database
+    const { error: dbError } = await supabase
+      .from('contact_submissions')
+      .insert([payload]);
+
+    if (dbError) {
+      alert("Database error. Please try again.");
       setLoading(false);
+      return;
     }
+
+    // 2. Trigger the Email Function
+    // First, get the recipient from settings
+    const { data: settings } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'contact_recipient_email')
+      .single();
+
+    await supabase.functions.invoke('send-contact-email', {
+      body: { ...payload, recipient: settings?.value || 'info@elighting.co.za' },
+    });
+
+    setSubmitted(true);
+    setLoading(false);
   };
 
   if (submitted) {
     return (
-      <main className="min-h-[70vh] bg-zinc-100 flex flex-col items-center justify-center text-center px-6">
-        <h1 className="text-4xl font-bold uppercase tracking-tighter mb-4 text-zinc-900">Transmission Received</h1>
+      <main className="min-h-[70vh] bg-zinc-100 flex flex-col items-center justify-center text-center">
+        <h1 className="text-4xl font-bold uppercase text-zinc-900">Enquiry Logged</h1>
+        <p className="text-zinc-500 font-mono mt-4">We will be in touch shortly.</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-zinc-100 px-6 py-16 md:py-24">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24">
-        {/* Contact Info (Left Side) */}
-        <div className="space-y-12">
-            <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-tighter text-zinc-900">Connect</h1>
-            <div className="space-y-4 font-mono text-sm">
-                <p>Tel: 011 452 3964</p>
-                <p>Email: info@elighting.co.za</p>
-            </div>
+    <main className="min-h-screen bg-zinc-100 px-6 py-24">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24">
+        <div>
+           <h1 className="text-7xl font-bold uppercase tracking-tighter text-zinc-900">Contact</h1>
+           <p className="mt-8 text-zinc-600 font-light text-lg">Your data is stored securely and transmitted directly to our sales team.</p>
         </div>
-
-        {/* The Form (Right Side) */}
-        <div className="bg-white border border-zinc-200 p-8 shadow-sm">
-          {/* CRITICAL CHANGE: 
-            We removed 'data-netlify' and 'netlify' attributes.
-            We use a standard onSubmit handler.
-          */}
-          <form 
-            onSubmit={handleSubmit} 
-            className="space-y-6"
-          >
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Name</label>
-              <input name="name" required className="w-full bg-zinc-50 border border-zinc-200 p-4" />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Email</label>
-              <input name="email" type="email" required className="w-full bg-zinc-50 border border-zinc-200 p-4" />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Message</label>
-              <textarea name="message" required rows={5} className="w-full bg-zinc-50 border border-zinc-200 p-4" />
-            </div>
-
-            <button type="submit" disabled={loading} className="w-full bg-zinc-900 text-white py-5 font-bold uppercase text-xs tracking-widest">
-              {loading ? 'SENDING...' : 'SEND'}
-            </button>
-          </form>
-        </div>
+        <form onSubmit={handleSubmit} className="bg-white p-12 border border-zinc-200 shadow-sm space-y-6">
+          <input name="name" placeholder="Name" required className="w-full p-4 border border-zinc-200" />
+          <input name="email" type="email" placeholder="Email" required className="w-full p-4 border border-zinc-200" />
+          <textarea name="message" placeholder="Message" rows={5} required className="w-full p-4 border border-zinc-200" />
+          <button type="submit" disabled={loading} className="w-full bg-zinc-900 text-white py-5 font-bold uppercase">
+            {loading ? 'Processing...' : 'Send Enquiry'}
+          </button>
+        </form>
       </div>
     </main>
   );
