@@ -127,7 +127,7 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Image Gallery</label>
             <div className="grid grid-cols-4 gap-2 mb-4">
-              {formData.images.map((img, idx) => (
+              {formData.images.map((img: string, idx: number) => (
                 <div key={idx} className="relative aspect-square border border-zinc-800">
                   <img src={img} className="w-full h-full object-cover" alt="Unit" />
                   <button 
