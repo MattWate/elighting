@@ -31,7 +31,6 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
     setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
   };
 
-  // FIXED: Explicitly typed the '_' parameter as string to avoid "implicit any" error
   const removeImage = (index: number) => {
     setFormData(prev => ({ 
       ...prev, 
@@ -127,7 +126,8 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Image Gallery</label>
             <div className="grid grid-cols-4 gap-2 mb-4">
-              {formData.images.map((img, idx) => (
+              {/* FIXED: Explicitly typed 'img' and 'idx' below */}
+              {formData.images.map((img: string, idx: number) => (
                 <div key={idx} className="relative aspect-square border border-zinc-800">
                   <img src={img} className="w-full h-full object-cover" alt="Unit" />
                   <button 
