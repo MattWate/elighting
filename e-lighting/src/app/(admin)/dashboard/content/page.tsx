@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import ImageUploader from '@/components/admin/ImageUploader';
 
 export default function ContentManager() {
   const [settings, setSettings] = useState<any[]>([]);
@@ -16,6 +17,7 @@ export default function ContentManager() {
   async function handleUpdate(id: string, newValue: string) {
     setLoading(true);
     await supabase.from('site_settings').update({ value: newValue }).eq('id', id);
+    fetchSettings();
     setLoading(false);
   }
 
@@ -28,21 +30,35 @@ export default function ContentManager() {
 
       <div className="space-y-10">
         {settings.map((s) => (
-          <div key={s.id} className="space-y-3">
+          <div key={s.id} className="space-y-3 p-6 border border-zinc-900 bg-black">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{s.description || s.key}</label>
-              <span className="text-[8px] text-zinc-800 font-mono uppercase">Key: {s.key}</span>
             </div>
-            <textarea 
-              defaultValue={s.value}
-              onBlur={(e) => handleUpdate(s.id, e.target.value)}
-              className="w-full bg-black border border-zinc-900 p-4 text-white font-mono text-sm focus:border-zinc-500 outline-none transition-all resize-none"
-              rows={s.value.length > 100 ? 4 : 2}
-            />
+
+            {s.key.includes('image') ? (
+              <div className="space-y-4">
+                {s.value && (
+                  <div className="w-full h-40 border border-zinc-800 overflow-hidden">
+                    <img src={s.value} className="w-full h-full object-cover grayscale" alt="Preview" />
+                  </div>
+                )}
+                <ImageUploader 
+                  bucket="category-images" 
+                  onUploadComplete={(url) => handleUpdate(s.id, url)} 
+                />
+              </div>
+            ) : (
+              <textarea 
+                defaultValue={s.value}
+                onBlur={(e) => handleUpdate(s.id, e.target.value)}
+                className="w-full bg-black border border-zinc-800 p-4 text-white font-mono text-sm focus:border-zinc-500 outline-none transition-all resize-none"
+                rows={s.value.length > 100 ? 4 : 2}
+              />
+            )}
           </div>
         ))}
       </div>
-      {loading && <p className="fixed bottom-10 right-10 text-white font-mono text-xs animate-pulse">SAVING TO DATABASE...</p>}
+      {loading && <p className="fixed bottom-10 right-10 text-white font-mono text-xs animate-pulse">SYNCING ASSETS...</p>}
     </main>
   );
 }
