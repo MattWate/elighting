@@ -4,6 +4,15 @@ import { Target, Eye, Activity, Globe } from 'lucide-react';
 export const revalidate = 0;
 
 export default async function AboutPage() {
+  // 1. Fetch the custom hero image from settings
+  const { data: settings } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'about_hero_image')
+    .single();
+
+  const heroImage = settings?.value || '/hero-industrial.jpg';
+
   return (
     <main className="min-h-screen bg-zinc-100">
       {/* Hero Header */}
@@ -40,11 +49,13 @@ export default async function AboutPage() {
               on a mission to transform how the continent lights up its surroundings.
             </p>
           </div>
+          
+          {/* Dynamically Updated Image from Admin */}
           <div className="relative aspect-video bg-zinc-200 overflow-hidden border border-zinc-300 shadow-sm">
              <img 
-               src="/hero-industrial.jpg" 
+               src={heroImage} 
                className="w-full h-full object-cover grayscale opacity-80"
-               alt="Industrial Lighting Warehouse"
+               alt="Our Story Hero"
              />
           </div>
         </div>
