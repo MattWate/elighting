@@ -7,8 +7,12 @@ import { ArrowRight } from 'lucide-react';
 export const revalidate = 0; 
 
 export default async function HomePage() {
+  // 1. Fetch Site Settings (including the new hero image key)
   const { data: content } = await supabase.from('site_settings').select('key, value');
   const find = (key: string) => content?.find(s => s.key === key)?.value || "";
+
+  // Get the dynamic hero image or fallback to the local asset
+  const heroImage = find('home_hero_image') || '/hero-industrial.jpg';
 
   const { data: featuredProducts } = await supabase
     .from('products')
@@ -24,11 +28,11 @@ export default async function HomePage() {
 
   return (
     <main className="bg-[#0a0a0a]">
-      {/* Hero Section */}
+      {/* Dynamic Hero Section */}
       <section className="relative min-h-[80vh] md:h-[90vh] w-full flex items-center overflow-hidden border-b border-zinc-800">
         <div 
-          className="absolute inset-0 bg-cover bg-center grayscale-[0.4] brightness-[0.3]"
-          style={{ backgroundImage: "url('/hero-industrial.jpg')" }}
+          className="absolute inset-0 bg-cover bg-center grayscale-[0.4] brightness-[0.3] transition-all duration-1000"
+          style={{ backgroundImage: `url('${heroImage}')` }}
         />
         <div className="relative w-full max-w-7xl mx-auto px-6 py-20">
           <div className="border-l-2 border-white pl-4 md:pl-8 py-4 max-w-3xl">
@@ -47,7 +51,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured Applications Slider */}
+      {/* Featured Applications */}
       <section className="py-24 border-b border-zinc-900 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 mb-12 flex justify-between items-end">
           <div>
@@ -66,6 +70,7 @@ export default async function HomePage() {
                 <img 
                   src={app.image_url} 
                   className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" 
+                  alt={app.title}
                 />
               )}
               <div className="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-black via-black/20 to-transparent">
@@ -82,7 +87,7 @@ export default async function HomePage() {
       {/* Featured Products */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 border-b border-zinc-900 pb-6 gap-4">
-          <h2 className="text-xl md:text-2xl font-bold uppercase tracking-widest">Featured Units</h2>
+          <h2 className="text-xl md:text-2xl font-bold uppercase tracking-widest text-white">Featured Units</h2>
           <Link href="/products" className="text-[10px] text-zinc-500 uppercase hover:text-white font-mono tracking-widest transition-colors">
             Full Inventory →
           </Link>
@@ -92,9 +97,6 @@ export default async function HomePage() {
           {featuredProducts?.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
-          {(!featuredProducts || featuredProducts.length === 0) && (
-             <p className="text-zinc-600 font-mono text-xs uppercase">No featured units selected in database.</p>
-          )}
         </div>
       </section>
 
