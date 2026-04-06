@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import ImageUploader from './ImageUploader';
-import { Trash2, Plus, Film } from 'lucide-react';
+import { Trash2, Plus, Film, Settings } from 'lucide-react';
 
 export default function AddProductForm({ onComplete, productToEdit }: any) {
   const [categories, setCategories] = useState<any[]>([]);
@@ -15,8 +15,26 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
     images: productToEdit?.images || [] as string[],
     video_url: productToEdit?.video_url || '',
     video_type: productToEdit?.video_type || 'youtube',
-    specs: productToEdit?.specs || {} as any,
-    is_featured: productToEdit?.is_featured || false
+    is_featured: productToEdit?.is_featured || false,
+    // Initialize specs with the specific fields from your requirements
+    specs: productToEdit?.specs || {
+      nominal_power: '',
+      luminous_flux: '',
+      luminous_efficacy: '',
+      cct: '',
+      led_lifetime: '',
+      cri: '',
+      nominal_input_voltage: '',
+      operating_temperature: '',
+      surge_protection: '',
+      ip_rating: '',
+      ik_rating: '',
+      compliance: '',
+      diffuser: '',
+      housing: '',
+      mounting: '',
+      emergency: ''
+    }
   });
 
   useEffect(() => {
@@ -35,6 +53,13 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
     setFormData(prev => ({ 
       ...prev, 
       images: prev.images.filter((_: string, i: number) => i !== index) 
+    }));
+  };
+
+  const updateSpec = (key: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specs: { ...prev.specs, [key]: value }
     }));
   };
 
@@ -70,6 +95,7 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
   return (
     <form onSubmit={handleSubmit} className="space-y-8 bg-[#0f0f0f] p-8 border border-zinc-800">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Left Column: Basic Details */}
         <div className="space-y-6">
           <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest border-b border-zinc-900 pb-2">Product Details</h3>
           
@@ -99,7 +125,7 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Description</label>
             <textarea 
-              rows={5} 
+              rows={4} 
               value={formData.description}
               className="w-full bg-black border border-zinc-800 p-4 text-white outline-none resize-none"
               onChange={(e) => setFormData({...formData, description: e.target.value})} 
@@ -120,13 +146,13 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
           </div>
         </div>
 
+        {/* Right Column: Media Assets */}
         <div className="space-y-6">
           <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest border-b border-zinc-900 pb-2">Media Assets</h3>
           
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Image Gallery</label>
             <div className="grid grid-cols-4 gap-2 mb-4">
-              {/* FIXED: Explicitly typed 'img' and 'idx' below */}
               {formData.images.map((img: string, idx: number) => (
                 <div key={idx} className="relative aspect-square border border-zinc-800">
                   <img src={img} className="w-full h-full object-cover" alt="Unit" />
@@ -174,6 +200,30 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
               <ImageUploader bucket="product-assets" onUploadComplete={(url) => setFormData({...formData, video_url: url})} />
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Full Width Section: Technical Specifications */}
+      <div className="space-y-6 pt-6 border-t border-zinc-900">
+        <div className="flex items-center gap-2">
+          <Settings size={14} className="text-zinc-500" />
+          <h3 className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest">Technical Specifications</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Object.keys(formData.specs).map((key) => (
+            <div key={key}>
+              <label className="block text-zinc-500 text-[9px] uppercase mb-2 font-mono tracking-wider">
+                {key.replace(/_/g, ' ')}
+              </label>
+              <input 
+                value={formData.specs[key as keyof typeof formData.specs]}
+                onChange={(e) => updateSpec(key, e.target.value)}
+                className="w-full bg-black border border-zinc-800 p-3 text-white text-xs outline-none focus:border-zinc-500 transition-colors"
+                placeholder="N/A"
+              />
+            </div>
+          ))}
         </div>
       </div>
 
