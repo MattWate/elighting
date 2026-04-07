@@ -152,25 +152,61 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
           
           <div>
             <label className="block text-zinc-400 text-xs uppercase mb-2">Image Gallery</label>
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            {/* Grid now uses items-start to keep the uploader aligned and prevent layout shifts */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 mb-4 items-start">
               {formData.images.map((img: string, idx: number) => (
-                <div key={idx} className="relative aspect-square border border-zinc-800">
+                <div key={idx} className="relative aspect-square border border-zinc-800 bg-black group">
                   <img src={img} className="w-full h-full object-cover" alt="Unit" />
                   <button 
                     type="button"
                     onClick={() => removeImage(idx)}
-                    className="absolute top-1 right-1 p-1 bg-red-900 text-white hover:bg-red-600 transition-colors"
+                    className="absolute top-1 right-1 p-1 bg-red-900 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                   >
                     <Trash2 size={10} />
                   </button>
                 </div>
               ))}
-              <div className="border-2 border-dashed border-zinc-800 flex items-center justify-center aspect-square">
+              
+              {/* Container for the uploader to ensure it doesn't overlap existing images */}
+              <div className="border-2 border-dashed border-zinc-800 bg-black flex flex-col items-center justify-center aspect-square overflow-hidden p-2">
                 <ImageUploader bucket="product-assets" onUploadComplete={addImage} />
               </div>
             </div>
           </div>
-
+        
+          <div className="space-y-4 p-4 bg-black border border-zinc-900">
+            <div className="flex gap-4 mb-2">
+              <button 
+                type="button"
+                onClick={() => setFormData({...formData, video_type: 'youtube'})}
+                className={`text-[9px] uppercase font-bold tracking-widest ${formData.video_type === 'youtube' ? 'text-white underline' : 'text-zinc-600 hover:text-white transition-colors'}`}
+              >
+                YouTube Link
+              </button>
+              <button 
+                type="button"
+                onClick={() => setFormData({...formData, video_type: 'upload'})}
+                className={`text-[9px] uppercase font-bold tracking-widest ${formData.video_type === 'upload' ? 'text-white underline' : 'text-zinc-600 hover:text-white transition-colors'}`}
+              >
+                Direct Upload
+              </button>
+            </div>
+        
+            {formData.video_type === 'youtube' ? (
+              <input 
+                placeholder="YouTube URL"
+                value={formData.video_url}
+                onChange={(e) => setFormData({...formData, video_url: e.target.value})}
+                className="w-full bg-zinc-900 border border-zinc-800 p-3 text-xs text-white outline-none focus:border-zinc-500 transition-all"
+              />
+            ) : (
+              <div className="bg-zinc-900 p-2 border border-zinc-800">
+                <ImageUploader bucket="product-assets" onUploadComplete={(url) => setFormData({...formData, video_url: url})} />
+              </div>
+            )}
+          </div>
+        </div>
+        
           <div className="space-y-4 p-4 bg-black border border-zinc-900">
             <div className="flex gap-4 mb-2">
               <button 
