@@ -1,6 +1,7 @@
 // e-lighting/src/components/admin/ImageUploader.tsx
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Plus, Loader2 } from 'lucide-react';
 
 interface UploaderProps {
   bucket: 'product-assets' | 'category-images';
@@ -37,14 +38,27 @@ export default function ImageUploader({ bucket, onUploadComplete }: UploaderProp
   }
 
   return (
-    <div className="border border-zinc-800 p-4 bg-black">
+    <div className="relative w-full h-full flex flex-col items-center justify-center group cursor-pointer">
+      {uploading ? (
+        <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+      ) : (
+        <>
+          <Plus className="w-6 h-6 text-zinc-700 group-hover:text-white transition-colors" />
+          <span className="text-[8px] text-zinc-700 uppercase font-mono mt-2 group-hover:text-white">Add Asset</span>
+        </>
+      )}
+      
+      {/* CRITICAL FIX: 
+        We hide the actual input but make it cover the entire area 
+        so clicking anywhere in the dashed box triggers the upload.
+      */}
       <input
         type="file"
         onChange={handleUpload}
         disabled={uploading}
-        className="text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700"
+        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        accept="image/*,video/*"
       />
-      {uploading && <p className="mt-2 text-[10px] text-zinc-500 animate-pulse">UPLOADING ASSET...</p>}
     </div>
   );
 }
