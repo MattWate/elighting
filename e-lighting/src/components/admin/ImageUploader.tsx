@@ -1,4 +1,4 @@
-// e-lighting/src/components/admin/ImageUploader.tsx
+// src/components/admin/ImageUploader.tsx
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Plus, Loader2 } from 'lucide-react';
@@ -38,7 +38,7 @@ export default function ImageUploader({ bucket, onUploadComplete }: UploaderProp
   }
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center group cursor-pointer">
+    <div className="relative w-full h-full flex flex-col items-center justify-center group cursor-pointer min-h-[100px]">
       {uploading ? (
         <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
       ) : (
@@ -48,9 +48,9 @@ export default function ImageUploader({ bucket, onUploadComplete }: UploaderProp
         </>
       )}
       
-      {/* CRITICAL FIX: 
-        We hide the actual input but make it cover the entire area 
-        so clicking anywhere in the dashed box triggers the upload.
+      {/* INVISIBLE INPUT FIX: 
+        Stretches to fill the container so the standard 'Choose File' button 
+        is hidden but the whole area remains clickable.
       */}
       <input
         type="file"
