@@ -48,6 +48,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link href="/dashboard/applications" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
                 Applications
               </Link>
+              <Link href="/dashboard/enquiries" className="block px-4 py-2 hover:bg-zinc-900 transition-colors">
+                Enquiries
+              </Link>
               <button 
                 onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
                 className="w-full text-left px-4 py-2 text-red-900 hover:text-red-500 transition-colors mt-10 uppercase text-[10px] font-bold tracking-widest"
