@@ -1,15 +1,25 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getCurrentUserPermissions, hasPermission, Permission } from '@/lib/permissions';
 import { Mail, Clock, User, MessageSquare, Trash2, CheckCircle } from 'lucide-react';
 
 export default function EnquiryInbox() {
   const [enquiries, setEnquiries] = useState<any[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const canUpdate = hasPermission(permissions, 'enquiries.update');
+
   useEffect(() => {
-    fetchEnquiries();
+    initialise();
   }, []);
+
+  async function initialise() {
+    const userPermissions = await getCurrentUserPermissions();
+    setPermissions(userPermissions);
+    await fetchEnquiries();
+  }
 
   async function fetchEnquiries() {
     setLoading(true);
@@ -23,6 +33,11 @@ export default function EnquiryInbox() {
   }
 
   async function updateStatus(id: string, newStatus: string) {
+    if (!canUpdate) {
+      alert('You do not have permission to update enquiries.');
+      return;
+    }
+
     await supabase
       .from('contact_submissions')
       .update({ status: newStatus })
@@ -31,6 +46,11 @@ export default function EnquiryInbox() {
   }
 
   async function deleteEnquiry(id: string) {
+    if (!canUpdate) {
+      alert('You do not have permission to delete enquiries.');
+      return;
+    }
+
     if (!confirm("Permanently delete this enquiry?")) return;
     await supabase.from('contact_submissions').delete().eq('id', id);
     fetchEnquiries();
@@ -74,22 +94,24 @@ export default function EnquiryInbox() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  {item.status === 'unread' && (
+                {canUpdate && (
+                  <div className="flex gap-4">
+                    {item.status === 'unread' && (
+                      <button 
+                        onClick={() => updateStatus(item.id, 'read')}
+                        className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center gap-2"
+                      >
+                        <CheckCircle size={14} /> Mark Read
+                      </button>
+                    )}
                     <button 
-                      onClick={() => updateStatus(item.id, 'read')}
-                      className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center gap-2"
+                      onClick={() => deleteEnquiry(item.id)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-red-900 hover:text-red-500 flex items-center gap-2"
                     >
-                      <CheckCircle size={14} /> Mark Read
+                      <Trash2 size={14} /> Delete
                     </button>
-                  )}
-                  <button 
-                    onClick={() => deleteEnquiry(item.id)}
-                    className="text-[10px] font-bold uppercase tracking-widest text-red-900 hover:text-red-500 flex items-center gap-2"
-                  >
-                    <Trash2 size={14} /> Delete
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-black/50 border border-zinc-900 p-6">
