@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { fetchManagerSalesInvoices } from './client';
 import { ManagerInvoiceLine, ManagerSalesInvoice, ManagerSyncSummary, ProductRecipeComponent } from './types';
 
@@ -18,6 +18,8 @@ function getBestLineSku(line: ManagerInvoiceLine) {
 }
 
 async function createSyncRun() {
+  const supabaseAdmin = getSupabaseAdmin();
+
   const { data, error } = await supabaseAdmin
     .from('manager_sync_runs')
     .insert([{ status: 'running' }])
@@ -29,6 +31,8 @@ async function createSyncRun() {
 }
 
 async function finishSyncRun(syncRunId: string, summary: Omit<ManagerSyncSummary, 'syncRunId' | 'unmatchedLines'>) {
+  const supabaseAdmin = getSupabaseAdmin();
+
   const { error } = await supabaseAdmin
     .from('manager_sync_runs')
     .update({
@@ -45,6 +49,8 @@ async function finishSyncRun(syncRunId: string, summary: Omit<ManagerSyncSummary
 }
 
 async function failSyncRun(syncRunId: string, errorMessage: string) {
+  const supabaseAdmin = getSupabaseAdmin();
+
   await supabaseAdmin
     .from('manager_sync_runs')
     .update({
@@ -56,6 +62,8 @@ async function failSyncRun(syncRunId: string, errorMessage: string) {
 }
 
 async function getProductsBySku() {
+  const supabaseAdmin = getSupabaseAdmin();
+
   const { data, error } = await supabaseAdmin
     .from('products')
     .select('id, name, sku, product_components(component_id, quantity_required, wastage_percentage)')
@@ -74,6 +82,8 @@ async function getProductsBySku() {
 }
 
 async function importInvoice(invoice: ManagerSalesInvoice, syncRunId: string) {
+  const supabaseAdmin = getSupabaseAdmin();
+
   const { data, error } = await supabaseAdmin
     .from('manager_invoice_imports')
     .insert([{
@@ -104,6 +114,8 @@ async function applyStockMovement(params: {
   quantityDelta: number;
   notes: string;
 }) {
+  const supabaseAdmin = getSupabaseAdmin();
+
   const { error } = await supabaseAdmin.rpc('apply_component_stock_movement', {
     target_component_id: params.componentId,
     target_product_id: params.productId,
