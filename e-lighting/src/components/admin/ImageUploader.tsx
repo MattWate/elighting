@@ -6,9 +6,28 @@ import { Plus, Loader2 } from 'lucide-react';
 interface UploaderProps {
   bucket: 'product-assets' | 'category-images';
   onUploadComplete: (url: string) => void;
+  acceptedTypes?: string;
+  maxSizeMb?: number;
 }
 
-export default function ImageUploader({ bucket, onUploadComplete }: UploaderProps) {
+function acceptsFile(file: File, acceptedTypes: string) {
+  if (!acceptedTypes) return true;
+
+  return acceptedTypes.split(',').some((type) => {
+    const trimmedType = type.trim();
+    if (trimmedType.endsWith('/*')) {
+      return file.type.startsWith(trimmedType.replace('/*', '/'));
+    }
+    return file.type === trimmedType;
+  });
+}
+
+export default function ImageUploader({
+  bucket,
+  onUploadComplete,
+  acceptedTypes = 'image/*,video/*',
+  maxSizeMb = 25,
+}: UploaderProps) {
   const [uploading, setUploading] = useState(false);
 
   async function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -17,8 +36,25 @@ export default function ImageUploader({ bucket, onUploadComplete }: UploaderProp
       if (!event.target.files || event.target.files.length === 0) return;
 
       const file = event.target.files[0];
+      const maxSizeBytes = maxSizeMb * 1024 * 1024;
+
+      if (!acceptsFile(file, acceptedTypes)) {
+        alert(`Invalid file type. Allowed: ${acceptedTypes}`);
+        return;
+      }
+
+      if (file.size > maxSizeBytes) {
+        alert(`File is too large. Maximum size is ${maxSizeMb}MB.`);
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const safeName = file.name
+        .replace(`.${fileExt}`, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      const fileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -34,6 +70,7 @@ export default function ImageUploader({ bucket, onUploadComplete }: UploaderProp
       alert('Upload failed');
     } finally {
       setUploading(false);
+      event.target.value = '';
     }
   }
 
@@ -47,17 +84,12 @@ export default function ImageUploader({ bucket, onUploadComplete }: UploaderProp
           <span className="text-[8px] text-zinc-700 uppercase font-mono mt-2 group-hover:text-white">Add Asset</span>
         </>
       )}
-      
-      {/* INVISIBLE INPUT FIX: 
-        Stretches to fill the container so the standard 'Choose File' button 
-        is hidden but the whole area remains clickable.
-      */}
       <input
         type="file"
         onChange={handleUpload}
         disabled={uploading}
         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-        accept="image/*,video/*"
+        accept={acceptedTypes}
       />
     </div>
   );
