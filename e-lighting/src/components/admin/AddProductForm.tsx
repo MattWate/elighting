@@ -4,19 +4,20 @@ import { supabase } from '@/lib/supabase';
 import ImageUploader from './ImageUploader';
 import { Trash2, Settings, Package, Info } from 'lucide-react';
 
-export default function AddProductForm({ onComplete, productToEdit }: any) {
+export default function AddProductForm({ onComplete, productToEdit, canSubmit = true }: any) {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: productToEdit?.name || '',
+    sku: productToEdit?.sku || '',
     category_id: productToEdit?.category_id || '',
     description: productToEdit?.description || '',
     images: productToEdit?.images || [] as string[],
+    data_sheet_url: productToEdit?.data_sheet_url || '',
     video_url: productToEdit?.video_url || '',
     video_type: productToEdit?.video_type || 'youtube',
     is_featured: productToEdit?.is_featured || false,
-    // Explicitly initializing all 16 required keys for the editor
     specs: {
       nominal_power: productToEdit?.specs?.nominal_power || '',
       luminous_flux: productToEdit?.specs?.luminous_flux || '',
@@ -65,6 +66,12 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canSubmit) {
+      alert('You do not have permission to save product changes.');
+      return;
+    }
+
     setLoading(true);
     
     const slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
@@ -95,8 +102,6 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
   return (
     <form onSubmit={handleSubmit} className="space-y-12 bg-[#0c0c0c] p-8 border border-zinc-900 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-        
-        {/* Left Column: Core Data */}
         <div className="space-y-8">
           <div className="flex items-center gap-2 text-zinc-500 border-b border-zinc-900 pb-2">
             <Package size={14} />
@@ -111,6 +116,15 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
                 value={formData.name}
                 className="w-full bg-black border border-zinc-800 p-4 text-white outline-none font-mono focus:border-zinc-500 transition-all"
                 onChange={(e) => setFormData({...formData, name: e.target.value})} 
+              />
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 text-[10px] uppercase mb-2 font-mono">SKU / Product Code</label>
+              <input 
+                value={formData.sku}
+                className="w-full bg-black border border-zinc-800 p-4 text-white outline-none font-mono focus:border-zinc-500 transition-all"
+                onChange={(e) => setFormData({...formData, sku: e.target.value})} 
               />
             </div>
 
@@ -152,7 +166,6 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
           </div>
         </div>
 
-        {/* Right Column: Media Assets */}
         <div className="space-y-8">
           <div className="flex items-center gap-2 text-zinc-500 border-b border-zinc-900 pb-2">
             <Info size={14} />
@@ -175,11 +188,22 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
                     </button>
                   </div>
                 ))}
-                
-                {/* Standardized Aspect-Square Uploader Slot */}
                 <div className="aspect-square border-2 border-dashed border-zinc-800 bg-black hover:border-zinc-500 transition-colors">
-                  <ImageUploader bucket="product-assets" onUploadComplete={addImage} />
+                  <ImageUploader bucket="product-assets" onUploadComplete={addImage} acceptedTypes="image/*" />
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 text-[10px] uppercase mb-2 font-mono">Data Sheet URL</label>
+              <input 
+                placeholder="Paste PDF URL or upload below"
+                value={formData.data_sheet_url}
+                onChange={(e) => setFormData({...formData, data_sheet_url: e.target.value})}
+                className="w-full bg-black border border-zinc-800 p-4 text-white outline-none focus:border-zinc-500 transition-all"
+              />
+              <div className="mt-3 h-24 border border-dashed border-zinc-800 bg-black">
+                <ImageUploader bucket="product-assets" acceptedTypes="application/pdf" onUploadComplete={(url) => setFormData({...formData, data_sheet_url: url})} />
               </div>
             </div>
 
@@ -210,7 +234,7 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
                 />
               ) : (
                 <div className="bg-zinc-900 p-2 border border-zinc-800 h-24">
-                  <ImageUploader bucket="product-assets" onUploadComplete={(url) => setFormData({...formData, video_url: url})} />
+                  <ImageUploader bucket="product-assets" acceptedTypes="video/*" onUploadComplete={(url) => setFormData({...formData, video_url: url})} />
                 </div>
               )}
             </div>
@@ -218,7 +242,6 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
         </div>
       </div>
 
-      {/* Engineering Specifications: Explicit Grid */}
       <div className="space-y-8 pt-8 border-t border-zinc-900">
         <div className="flex items-center gap-2 text-zinc-500">
           <Settings size={14} />
@@ -232,7 +255,6 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
                 {key.replace(/_/g, ' ')}
               </label>
               <input 
-                required
                 value={(formData.specs as any)[key]}
                 onChange={(e) => updateSpec(key, e.target.value)}
                 className="w-full bg-black border border-zinc-800 p-3 text-white text-xs outline-none focus:border-zinc-500 transition-colors"
@@ -244,10 +266,10 @@ export default function AddProductForm({ onComplete, productToEdit }: any) {
       </div>
 
       <button 
-        disabled={loading} 
+        disabled={loading || !canSubmit} 
         className="w-full bg-white text-black py-6 font-black uppercase text-xs tracking-widest hover:bg-zinc-300 transition-all disabled:opacity-20 sticky bottom-0 z-10 shadow-2xl"
       >
-        {loading ? 'SYNCHRONIZING DATA...' : 'Confirm Changes & Deploy'}
+        {loading ? 'SYNCHRONIZING DATA...' : canSubmit ? 'Confirm Changes & Deploy' : 'Permission Required'}
       </button>
     </form>
   );
