@@ -75,7 +75,13 @@ export default function AddProductForm({ onComplete, productToEdit, canSubmit = 
     setLoading(true);
     
     const slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    const productData = { ...formData, slug };
+    const productData = {
+      ...formData,
+      slug,
+      sku: formData.sku.trim() || null,
+      data_sheet_url: formData.data_sheet_url.trim() || null,
+      video_url: formData.video_url.trim() || null,
+    };
 
     let error;
     if (productToEdit) {
