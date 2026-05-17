@@ -2,7 +2,12 @@ import { ManagerSalesInvoice } from './types';
 
 const managerBaseUrl = process.env.MANAGER_API_BASE_URL;
 const managerApiToken = process.env.MANAGER_API_TOKEN;
+const managerApiSecret = process.env.MANAGER_API_SECRET;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/sales-invoices';
+
+// Default is deliberately conservative. Once the exact Manager.io API auth format is confirmed,
+// set MANAGER_AUTH_MODE to one of: bearer, basic, token-secret-headers, query-token-secret.
+const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'token-secret-headers';
 
 type ManagerRequestOptions = {
   from?: string;
@@ -17,6 +22,48 @@ function ensureManagerConfig() {
   if (!managerApiToken) {
     throw new Error('Missing MANAGER_API_TOKEN environment variable.');
   }
+
+  if (!managerApiSecret) {
+    throw new Error('Missing MANAGER_API_SECRET environment variable.');
+  }
+}
+
+function getManagerAuthHeaders(): Record<string, string> {
+  ensureManagerConfig();
+
+  if (managerAuthMode === 'bearer') {
+    return {
+      Authorization: `Bearer ${managerApiToken}`,
+    };
+  }
+
+  if (managerAuthMode === 'basic') {
+    const credentials = Buffer.from(`${managerApiToken}:${managerApiSecret}`).toString('base64');
+    return {
+      Authorization: `Basic ${credentials}`,
+    };
+  }
+
+  if (managerAuthMode === 'token-secret-headers') {
+    return {
+      'X-Manager-Token': managerApiToken!,
+      'X-Manager-Secret': managerApiSecret!,
+    };
+  }
+
+  if (managerAuthMode === 'query-token-secret') {
+    return {};
+  }
+
+  throw new Error(`Unsupported MANAGER_AUTH_MODE: ${managerAuthMode}`);
+}
+
+function addManagerQueryAuth(url: URL) {
+  if (managerAuthMode !== 'query-token-secret') return;
+
+  ensureManagerConfig();
+  url.searchParams.set('token', managerApiToken!);
+  url.searchParams.set('secret', managerApiSecret!);
 }
 
 function numberFromUnknown(value: unknown, fallback = 0) {
@@ -61,11 +108,12 @@ export async function fetchManagerSalesInvoices(options: ManagerRequestOptions =
 
   if (options.from) url.searchParams.set('from', options.from);
   if (options.to) url.searchParams.set('to', options.to);
+  addManagerQueryAuth(url);
 
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
-      Authorization: `Bearer ${managerApiToken}`,
+      ...getManagerAuthHeaders(),
       Accept: 'application/json',
     },
     cache: 'no-store',
