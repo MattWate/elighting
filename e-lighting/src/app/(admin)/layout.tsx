@@ -13,6 +13,7 @@ const adminLinks: { href: string; label: string; permission: Permission | null }
   { href: '/dashboard/content', label: 'Site Content', permission: 'content.view' },
   { href: '/dashboard/applications', label: 'Applications', permission: 'applications.view' },
   { href: '/dashboard/enquiries', label: 'Enquiries', permission: 'enquiries.view' },
+  { href: '/dashboard/stock', label: 'Stock & Manager.io', permission: 'stock.view' },
   { href: '/dashboard/users', label: 'Users & Roles', permission: 'users.view' },
 ];
 
