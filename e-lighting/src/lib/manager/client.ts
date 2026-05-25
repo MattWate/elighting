@@ -3,7 +3,7 @@ import { ManagerSalesInvoice } from './types';
 const managerBaseUrl = process.env.MANAGER_API_BASE_URL;
 const managerApiToken = process.env.MANAGER_API_TOKEN;
 const managerApiSecret = process.env.MANAGER_API_SECRET;
-const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/sales-invoices';
+const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
 // Default is deliberately conservative. Once the exact Manager.io API auth format is confirmed,
 // set MANAGER_AUTH_MODE to one of: bearer, basic, token-secret-headers, query-token-secret.
@@ -15,7 +15,7 @@ type ManagerRequestOptions = {
 };
 
 function ensureManagerConfig() {
-  if (!managerBaseUrl) {
+  if (!managerBaseUrl && !managerSalesInvoicesPath.startsWith('http')) {
     throw new Error('Missing MANAGER_API_BASE_URL environment variable.');
   }
 
@@ -26,6 +26,18 @@ function ensureManagerConfig() {
   if (!managerApiSecret) {
     throw new Error('Missing MANAGER_API_SECRET environment variable.');
   }
+}
+
+function buildManagerUrl(pathOrUrl: string) {
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return new URL(pathOrUrl);
+  }
+
+  if (!managerBaseUrl) {
+    throw new Error('Missing MANAGER_API_BASE_URL environment variable.');
+  }
+
+  return new URL(pathOrUrl, managerBaseUrl);
 }
 
 function getManagerAuthHeaders(): Record<string, string> {
@@ -104,7 +116,7 @@ function normaliseInvoice(rawInvoice: any): ManagerSalesInvoice {
 export async function fetchManagerSalesInvoices(options: ManagerRequestOptions = {}): Promise<ManagerSalesInvoice[]> {
   ensureManagerConfig();
 
-  const url = new URL(managerSalesInvoicesPath, managerBaseUrl);
+  const url = buildManagerUrl(managerSalesInvoicesPath);
 
   if (options.from) url.searchParams.set('from', options.from);
   if (options.to) url.searchParams.set('to', options.to);
