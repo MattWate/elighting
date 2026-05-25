@@ -35,6 +35,7 @@ export function getRequiredPermissionForPath(pathname: string): Permission | nul
   if (pathname.startsWith('/dashboard/content')) return 'content.view';
   if (pathname.startsWith('/dashboard/applications')) return 'applications.view';
   if (pathname.startsWith('/dashboard/enquiries')) return 'enquiries.view';
+  if (pathname.startsWith('/dashboard/stock')) return 'stock.view';
   if (pathname.startsWith('/dashboard/users')) return 'users.view';
 
   return null;
