@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUserPermissions, hasPermission, Permission } from '@/lib/permissions';
 import AccessDenied from '@/components/admin/AccessDenied';
-import { PlugZap, RefreshCw, AlertTriangle, CheckCircle2, Radar } from 'lucide-react';
+import { PlugZap, RefreshCw, AlertTriangle, CheckCircle2, Radar, FileJson } from 'lucide-react';
 
 type TestResult = {
   ok?: boolean;
@@ -34,18 +34,26 @@ type TestResult = {
     statusText: string;
     bodyPreview: string;
   }>;
+  firstInvoiceShape?: unknown;
   error?: string;
 };
+
+type ManagerEndpoint =
+  | '/api/manager/test-connection'
+  | '/api/manager/auth-probe'
+  | '/api/manager/invoice-shape';
 
 export default function StockDashboardPage() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState(false);
   const [probing, setProbing] = useState(false);
+  const [inspecting, setInspecting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
   const canView = hasPermission(permissions, 'stock.view');
   const canTestManager = hasPermission(permissions, 'integrations.manager.view');
+  const busy = testing || probing || inspecting;
 
   useEffect(() => {
     async function initialise() {
@@ -57,7 +65,7 @@ export default function StockDashboardPage() {
     initialise();
   }, []);
 
-  async function callManagerEndpoint(endpoint: '/api/manager/test-connection' | '/api/manager/auth-probe') {
+  async function callManagerEndpoint(endpoint: ManagerEndpoint) {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData.session?.access_token;
 
@@ -111,6 +119,23 @@ export default function StockDashboardPage() {
     }
   }
 
+  async function inspectInvoiceShape() {
+    setInspecting(true);
+    setTestResult(null);
+
+    try {
+      const payload = await callManagerEndpoint('/api/manager/invoice-shape');
+      setTestResult(payload);
+    } catch (error) {
+      setTestResult({
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unknown invoice shape inspection error',
+      });
+    } finally {
+      setInspecting(false);
+    }
+  }
+
   if (loading) {
     return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-zinc-500 font-mono text-xs uppercase tracking-widest">Loading stock dashboard...</div>;
   }
@@ -136,13 +161,13 @@ export default function StockDashboardPage() {
           </div>
 
           <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-            The standard test calls the Manager.io sales invoices endpoint using the configured auth mode. The auth probe tries several safe authentication formats and reports which status each one returns.
+            The standard test calls the Manager.io sales invoices endpoint. The auth probe tries several safe authentication formats. The invoice shape inspection helps us find where Manager stores invoice line items.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
             <button
               onClick={testConnection}
-              disabled={testing || probing || !canTestManager}
+              disabled={busy || !canTestManager}
               className="bg-white text-black px-6 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3"
             >
               {testing ? <RefreshCw size={14} className="animate-spin" /> : <PlugZap size={14} />}
@@ -151,11 +176,20 @@ export default function StockDashboardPage() {
 
             <button
               onClick={runAuthProbe}
-              disabled={testing || probing || !canTestManager}
+              disabled={busy || !canTestManager}
               className="border border-zinc-700 text-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-900 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3"
             >
               {probing ? <RefreshCw size={14} className="animate-spin" /> : <Radar size={14} />}
               {probing ? 'Probing...' : 'Run Auth Probe'}
+            </button>
+
+            <button
+              onClick={inspectInvoiceShape}
+              disabled={busy || !canTestManager}
+              className="border border-zinc-700 text-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-900 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            >
+              {inspecting ? <RefreshCw size={14} className="animate-spin" /> : <FileJson size={14} />}
+              {inspecting ? 'Inspecting...' : 'Inspect Invoice Shape'}
             </button>
           </div>
 
@@ -173,7 +207,25 @@ export default function StockDashboardPage() {
             <p className="text-zinc-600 font-mono text-xs uppercase tracking-widest">No test run yet.</p>
           )}
 
-          {testResult?.results && (
+          {testResult?.firstInvoiceShape && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 text-emerald-500">
+                <CheckCircle2 size={18} />
+                <span className="text-[10px] uppercase tracking-widest font-bold">Invoice shape loaded</span>
+              </div>
+
+              <div className="p-4 border border-zinc-900 bg-[#0c0c0c] text-xs font-mono">
+                <span className="block text-zinc-600 uppercase mb-2">Invoices Found</span>
+                <span className="text-white text-2xl font-bold">{testResult.invoiceCount ?? 0}</span>
+              </div>
+
+              <pre className="whitespace-pre-wrap text-xs font-mono text-zinc-400 bg-[#0c0c0c] border border-zinc-900 p-4 overflow-auto max-h-[600px]">
+                {JSON.stringify(testResult.firstInvoiceShape, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {!testResult?.firstInvoiceShape && testResult?.results && (
             <div className="space-y-5">
               <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
                 Target: {testResult.target?.origin}{testResult.target?.pathname}
@@ -192,7 +244,7 @@ export default function StockDashboardPage() {
             </div>
           )}
 
-          {!testResult?.results && testResult?.ok && (
+          {!testResult?.firstInvoiceShape && !testResult?.results && testResult?.ok && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 text-emerald-500">
                 <CheckCircle2 size={18} />
@@ -222,7 +274,7 @@ export default function StockDashboardPage() {
             </div>
           )}
 
-          {testResult && !testResult.ok && !testResult.results && (
+          {testResult && !testResult.ok && !testResult.results && !testResult.firstInvoiceShape && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-red-500">
                 <AlertTriangle size={18} />
