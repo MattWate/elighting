@@ -5,8 +5,8 @@ const managerApiToken = process.env.MANAGER_API_TOKEN;
 const managerApiSecret = process.env.MANAGER_API_SECRET;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
-// Manager.io docs specify X-API-KEY. Other modes are retained for troubleshooting.
-// Supported modes: x-api-key, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
+// Manager.io expects X-API-KEY to be a Base64 string. Other modes are retained for troubleshooting.
+// Supported modes: x-api-key, x-api-key-token-only, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
 const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'x-api-key';
 
 type ManagerRequestOptions = {
@@ -23,7 +23,7 @@ function ensureManagerConfig() {
     throw new Error('Missing MANAGER_API_TOKEN environment variable.');
   }
 
-  if (['basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && !managerApiSecret) {
+  if (['x-api-key', 'basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && !managerApiSecret) {
     throw new Error('Missing MANAGER_API_SECRET environment variable.');
   }
 }
@@ -40,9 +40,12 @@ function buildManagerUrl(pathOrUrl: string) {
   return new URL(pathOrUrl, managerBaseUrl);
 }
 
+function encodeBase64(value: string) {
+  return Buffer.from(value).toString('base64');
+}
+
 function buildBasicAuthHeader(username: string, password: string) {
-  const credentials = Buffer.from(`${username}:${password}`).toString('base64');
-  return { Authorization: `Basic ${credentials}` };
+  return { Authorization: `Basic ${encodeBase64(`${username}:${password}`)}` };
 }
 
 function getManagerAuthHeaders(): Record<string, string> {
@@ -50,7 +53,13 @@ function getManagerAuthHeaders(): Record<string, string> {
 
   if (managerAuthMode === 'x-api-key') {
     return {
-      'X-API-KEY': managerApiToken!,
+      'X-API-KEY': encodeBase64(`${managerApiToken}:${managerApiSecret}`),
+    };
+  }
+
+  if (managerAuthMode === 'x-api-key-token-only') {
+    return {
+      'X-API-KEY': encodeBase64(managerApiToken!),
     };
   }
 
