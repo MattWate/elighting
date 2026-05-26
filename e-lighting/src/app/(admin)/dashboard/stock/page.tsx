@@ -207,7 +207,7 @@ export default function StockDashboardPage() {
             <p className="text-zinc-600 font-mono text-xs uppercase tracking-widest">No test run yet.</p>
           )}
 
-          {testResult?.firstInvoiceShape && (
+          {testResult?.firstInvoiceShape !== undefined && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 text-emerald-500">
                 <CheckCircle2 size={18} />
@@ -225,7 +225,7 @@ export default function StockDashboardPage() {
             </div>
           )}
 
-          {!testResult?.firstInvoiceShape && testResult?.results && (
+          {testResult?.firstInvoiceShape === undefined && testResult?.results && (
             <div className="space-y-5">
               <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
                 Target: {testResult.target?.origin}{testResult.target?.pathname}
@@ -244,7 +244,7 @@ export default function StockDashboardPage() {
             </div>
           )}
 
-          {!testResult?.firstInvoiceShape && !testResult?.results && testResult?.ok && (
+          {testResult?.firstInvoiceShape === undefined && !testResult?.results && testResult?.ok && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 text-emerald-500">
                 <CheckCircle2 size={18} />
@@ -274,7 +274,7 @@ export default function StockDashboardPage() {
             </div>
           )}
 
-          {testResult && !testResult.ok && !testResult.results && !testResult.firstInvoiceShape && (
+          {testResult && !testResult.ok && !testResult.results && testResult.firstInvoiceShape === undefined && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-red-500">
                 <AlertTriangle size={18} />
