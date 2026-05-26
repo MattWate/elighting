@@ -5,9 +5,9 @@ const managerApiToken = process.env.MANAGER_API_TOKEN;
 const managerApiSecret = process.env.MANAGER_API_SECRET;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
-// Supported modes: bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
-// basic = token:secret. basic-reverse = secret:token.
-const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'token-secret-headers';
+// Manager.io docs specify X-API-KEY. Other modes are retained for troubleshooting.
+// Supported modes: x-api-key, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
+const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'x-api-key';
 
 type ManagerRequestOptions = {
   from?: string;
@@ -23,7 +23,7 @@ function ensureManagerConfig() {
     throw new Error('Missing MANAGER_API_TOKEN environment variable.');
   }
 
-  if (!managerApiSecret) {
+  if (['basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && !managerApiSecret) {
     throw new Error('Missing MANAGER_API_SECRET environment variable.');
   }
 }
@@ -47,6 +47,12 @@ function buildBasicAuthHeader(username: string, password: string) {
 
 function getManagerAuthHeaders(): Record<string, string> {
   ensureManagerConfig();
+
+  if (managerAuthMode === 'x-api-key') {
+    return {
+      'X-API-KEY': managerApiToken!,
+    };
+  }
 
   if (managerAuthMode === 'bearer') {
     return {
