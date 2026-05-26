@@ -5,8 +5,8 @@ const managerApiToken = process.env.MANAGER_API_TOKEN;
 const managerApiSecret = process.env.MANAGER_API_SECRET;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
-// Manager.io expects X-API-KEY to be a Base64 string. Other modes are retained for troubleshooting.
-// Supported modes: x-api-key, x-api-key-token-only, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
+// Manager.io expects X-API-KEY to contain the Base64-encoded API token.
+// Supported modes: x-api-key, x-api-key-token-secret, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
 const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'x-api-key';
 
 type ManagerRequestOptions = {
@@ -23,7 +23,7 @@ function ensureManagerConfig() {
     throw new Error('Missing MANAGER_API_TOKEN environment variable.');
   }
 
-  if (['x-api-key', 'basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && !managerApiSecret) {
+  if (['x-api-key-token-secret', 'basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && !managerApiSecret) {
     throw new Error('Missing MANAGER_API_SECRET environment variable.');
   }
 }
@@ -53,13 +53,13 @@ function getManagerAuthHeaders(): Record<string, string> {
 
   if (managerAuthMode === 'x-api-key') {
     return {
-      'X-API-KEY': encodeBase64(`${managerApiToken}:${managerApiSecret}`),
+      'X-API-KEY': encodeBase64(managerApiToken!),
     };
   }
 
-  if (managerAuthMode === 'x-api-key-token-only') {
+  if (managerAuthMode === 'x-api-key-token-secret') {
     return {
-      'X-API-KEY': encodeBase64(managerApiToken!),
+      'X-API-KEY': encodeBase64(`${managerApiToken}:${managerApiSecret}`),
     };
   }
 
