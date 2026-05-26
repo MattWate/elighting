@@ -6,11 +6,10 @@ const managerApiSecret = process.env.MANAGER_API_SECRET;
 const managerApiKey = process.env.MANAGER_API_KEY || managerApiSecret || managerApiTokenName;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
-// Manager.io expects X-API-KEY to contain the Base64-encoded API token value.
-// MANAGER_API_KEY is the clearest env var. MANAGER_API_SECRET is kept as a fallback because
-// Manager labels the generated credential like a secret in parts of the UI.
-// Supported modes: x-api-key, x-api-key-token-secret, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
-const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'x-api-key';
+// Manager.io uses the X-API-KEY header. In some Manager setups the generated key appears
+// to already be encoded, so x-api-key-raw sends it without transformation.
+// Supported modes: x-api-key-raw, x-api-key, x-api-key-token-secret, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
+const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'x-api-key-raw';
 
 type ManagerRequestOptions = {
   from?: string;
@@ -53,6 +52,12 @@ function buildBasicAuthHeader(username: string, password: string) {
 
 function getManagerAuthHeaders(): Record<string, string> {
   ensureManagerConfig();
+
+  if (managerAuthMode === 'x-api-key-raw') {
+    return {
+      'X-API-KEY': managerApiKey!,
+    };
+  }
 
   if (managerAuthMode === 'x-api-key') {
     return {
