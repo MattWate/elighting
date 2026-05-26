@@ -5,8 +5,8 @@ const managerApiToken = process.env.MANAGER_API_TOKEN;
 const managerApiSecret = process.env.MANAGER_API_SECRET;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
-// Default is deliberately conservative. Once the exact Manager.io API auth format is confirmed,
-// set MANAGER_AUTH_MODE to one of: bearer, basic, token-secret-headers, query-token-secret.
+// Supported modes: bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
+// basic = token:secret. basic-reverse = secret:token.
 const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'token-secret-headers';
 
 type ManagerRequestOptions = {
@@ -40,6 +40,11 @@ function buildManagerUrl(pathOrUrl: string) {
   return new URL(pathOrUrl, managerBaseUrl);
 }
 
+function buildBasicAuthHeader(username: string, password: string) {
+  const credentials = Buffer.from(`${username}:${password}`).toString('base64');
+  return { Authorization: `Basic ${credentials}` };
+}
+
 function getManagerAuthHeaders(): Record<string, string> {
   ensureManagerConfig();
 
@@ -50,10 +55,11 @@ function getManagerAuthHeaders(): Record<string, string> {
   }
 
   if (managerAuthMode === 'basic') {
-    const credentials = Buffer.from(`${managerApiToken}:${managerApiSecret}`).toString('base64');
-    return {
-      Authorization: `Basic ${credentials}`,
-    };
+    return buildBasicAuthHeader(managerApiToken!, managerApiSecret!);
+  }
+
+  if (managerAuthMode === 'basic-reverse') {
+    return buildBasicAuthHeader(managerApiSecret!, managerApiToken!);
   }
 
   if (managerAuthMode === 'token-secret-headers') {
