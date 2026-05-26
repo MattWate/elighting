@@ -1,11 +1,14 @@
 import { ManagerSalesInvoice } from './types';
 
 const managerBaseUrl = process.env.MANAGER_API_BASE_URL;
-const managerApiToken = process.env.MANAGER_API_TOKEN;
+const managerApiTokenName = process.env.MANAGER_API_TOKEN;
 const managerApiSecret = process.env.MANAGER_API_SECRET;
+const managerApiKey = process.env.MANAGER_API_KEY || managerApiSecret || managerApiTokenName;
 const managerSalesInvoicesPath = process.env.MANAGER_SALES_INVOICES_PATH || '/api2/sales-invoices';
 
-// Manager.io expects X-API-KEY to contain the Base64-encoded API token.
+// Manager.io expects X-API-KEY to contain the Base64-encoded API token value.
+// MANAGER_API_KEY is the clearest env var. MANAGER_API_SECRET is kept as a fallback because
+// Manager labels the generated credential like a secret in parts of the UI.
 // Supported modes: x-api-key, x-api-key-token-secret, bearer, basic, basic-reverse, token-secret-headers, query-token-secret.
 const managerAuthMode = process.env.MANAGER_AUTH_MODE || 'x-api-key';
 
@@ -19,12 +22,12 @@ function ensureManagerConfig() {
     throw new Error('Missing MANAGER_API_BASE_URL environment variable.');
   }
 
-  if (!managerApiToken) {
-    throw new Error('Missing MANAGER_API_TOKEN environment variable.');
+  if (!managerApiKey) {
+    throw new Error('Missing Manager API key. Set MANAGER_API_KEY to the generated Manager access token value.');
   }
 
-  if (['x-api-key-token-secret', 'basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && !managerApiSecret) {
-    throw new Error('Missing MANAGER_API_SECRET environment variable.');
+  if (['x-api-key-token-secret', 'basic', 'basic-reverse', 'token-secret-headers', 'query-token-secret'].includes(managerAuthMode) && (!managerApiTokenName || !managerApiSecret)) {
+    throw new Error('Missing MANAGER_API_TOKEN or MANAGER_API_SECRET environment variable for the selected auth mode.');
   }
 }
 
@@ -53,33 +56,33 @@ function getManagerAuthHeaders(): Record<string, string> {
 
   if (managerAuthMode === 'x-api-key') {
     return {
-      'X-API-KEY': encodeBase64(managerApiToken!),
+      'X-API-KEY': encodeBase64(managerApiKey!),
     };
   }
 
   if (managerAuthMode === 'x-api-key-token-secret') {
     return {
-      'X-API-KEY': encodeBase64(`${managerApiToken}:${managerApiSecret}`),
+      'X-API-KEY': encodeBase64(`${managerApiTokenName}:${managerApiSecret}`),
     };
   }
 
   if (managerAuthMode === 'bearer') {
     return {
-      Authorization: `Bearer ${managerApiToken}`,
+      Authorization: `Bearer ${managerApiKey}`,
     };
   }
 
   if (managerAuthMode === 'basic') {
-    return buildBasicAuthHeader(managerApiToken!, managerApiSecret!);
+    return buildBasicAuthHeader(managerApiTokenName!, managerApiSecret!);
   }
 
   if (managerAuthMode === 'basic-reverse') {
-    return buildBasicAuthHeader(managerApiSecret!, managerApiToken!);
+    return buildBasicAuthHeader(managerApiSecret!, managerApiTokenName!);
   }
 
   if (managerAuthMode === 'token-secret-headers') {
     return {
-      'X-Manager-Token': managerApiToken!,
+      'X-Manager-Token': managerApiTokenName!,
       'X-Manager-Secret': managerApiSecret!,
     };
   }
@@ -95,7 +98,7 @@ function addManagerQueryAuth(url: URL) {
   if (managerAuthMode !== 'query-token-secret') return;
 
   ensureManagerConfig();
-  url.searchParams.set('token', managerApiToken!);
+  url.searchParams.set('token', managerApiTokenName!);
   url.searchParams.set('secret', managerApiSecret!);
 }
 
