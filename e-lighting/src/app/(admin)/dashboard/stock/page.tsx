@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUserPermissions, hasPermission, Permission } from '@/lib/permissions';
 import AccessDenied from '@/components/admin/AccessDenied';
-import { PlugZap, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { PlugZap, RefreshCw, AlertTriangle, CheckCircle2, Radar } from 'lucide-react';
 
 type TestResult = {
   ok?: boolean;
@@ -23,6 +23,17 @@ type TestResult = {
       quantity: number;
     } | null;
   } | null;
+  target?: {
+    origin: string;
+    pathname: string;
+  };
+  results?: Array<{
+    mode: string;
+    ok: boolean;
+    status: number | null;
+    statusText: string;
+    bodyPreview: string;
+  }>;
   error?: string;
 };
 
@@ -30,6 +41,7 @@ export default function StockDashboardPage() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState(false);
+  const [probing, setProbing] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
   const canView = hasPermission(permissions, 'stock.view');
@@ -45,30 +57,32 @@ export default function StockDashboardPage() {
     initialise();
   }, []);
 
-  async function testConnection() {
-    setTesting(true);
-    setTestResult(null);
-
+  async function callManagerEndpoint(endpoint: '/api/manager/test-connection' | '/api/manager/auth-probe') {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData.session?.access_token;
 
     if (!accessToken) {
-      setTesting(false);
-      setTestResult({ ok: false, error: 'You are not logged in.' });
-      return;
+      return { ok: false, error: 'You are not logged in.' };
     }
 
-    try {
-      const response = await fetch('/api/manager/test-connection', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
 
-      const payload = await response.json();
+    return response.json();
+  }
+
+  async function testConnection() {
+    setTesting(true);
+    setTestResult(null);
+
+    try {
+      const payload = await callManagerEndpoint('/api/manager/test-connection');
       setTestResult(payload);
     } catch (error) {
       setTestResult({
@@ -77,6 +91,23 @@ export default function StockDashboardPage() {
       });
     } finally {
       setTesting(false);
+    }
+  }
+
+  async function runAuthProbe() {
+    setProbing(true);
+    setTestResult(null);
+
+    try {
+      const payload = await callManagerEndpoint('/api/manager/auth-probe');
+      setTestResult(payload);
+    } catch (error) {
+      setTestResult({
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unknown auth probe error',
+      });
+    } finally {
+      setProbing(false);
     }
   }
 
@@ -105,17 +136,28 @@ export default function StockDashboardPage() {
           </div>
 
           <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-            This test calls the Manager.io sales invoices endpoint and returns a safe sample. It does not import invoices or update stock.
+            The standard test calls the Manager.io sales invoices endpoint using the configured auth mode. The auth probe tries several safe authentication formats and reports which status each one returns.
           </p>
 
-          <button
-            onClick={testConnection}
-            disabled={testing || !canTestManager}
-            className="bg-white text-black px-6 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-3"
-          >
-            {testing ? <RefreshCw size={14} className="animate-spin" /> : <PlugZap size={14} />}
-            {testing ? 'Testing Connection...' : 'Test Manager Connection'}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={testConnection}
+              disabled={testing || probing || !canTestManager}
+              className="bg-white text-black px-6 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            >
+              {testing ? <RefreshCw size={14} className="animate-spin" /> : <PlugZap size={14} />}
+              {testing ? 'Testing...' : 'Test Connection'}
+            </button>
+
+            <button
+              onClick={runAuthProbe}
+              disabled={testing || probing || !canTestManager}
+              className="border border-zinc-700 text-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-900 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            >
+              {probing ? <RefreshCw size={14} className="animate-spin" /> : <Radar size={14} />}
+              {probing ? 'Probing...' : 'Run Auth Probe'}
+            </button>
+          </div>
 
           {!canTestManager && (
             <p className="mt-4 text-red-500 text-[10px] uppercase tracking-widest font-mono">
@@ -131,7 +173,26 @@ export default function StockDashboardPage() {
             <p className="text-zinc-600 font-mono text-xs uppercase tracking-widest">No test run yet.</p>
           )}
 
-          {testResult?.ok && (
+          {testResult?.results && (
+            <div className="space-y-5">
+              <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
+                Target: {testResult.target?.origin}{testResult.target?.pathname}
+              </div>
+              <div className="space-y-3">
+                {testResult.results.map((result) => (
+                  <div key={result.mode} className={`border p-4 ${result.ok ? 'border-emerald-800 bg-emerald-950/20' : 'border-zinc-900 bg-[#0c0c0c]'}`}>
+                    <div className="flex justify-between gap-4 mb-2">
+                      <span className={`text-[10px] uppercase tracking-widest font-bold ${result.ok ? 'text-emerald-400' : 'text-zinc-400'}`}>{result.mode}</span>
+                      <span className="text-[10px] font-mono text-zinc-500">{result.status ?? 'N/A'} {result.statusText}</span>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-xs font-mono text-zinc-500 max-h-32 overflow-auto">{result.bodyPreview || 'No body returned'}</pre>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!testResult?.results && testResult?.ok && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 text-emerald-500">
                 <CheckCircle2 size={18} />
@@ -161,7 +222,7 @@ export default function StockDashboardPage() {
             </div>
           )}
 
-          {testResult && !testResult.ok && (
+          {testResult && !testResult.ok && !testResult.results && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-red-500">
                 <AlertTriangle size={18} />
