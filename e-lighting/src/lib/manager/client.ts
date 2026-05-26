@@ -142,6 +142,41 @@ function normaliseInvoice(rawInvoice: any): ManagerSalesInvoice {
   };
 }
 
+export async function fetchRawManagerSalesInvoices(options: ManagerRequestOptions = {}): Promise<any[]> {
+  ensureManagerConfig();
+
+  const url = buildManagerUrl(managerSalesInvoicesPath);
+
+  if (options.from) url.searchParams.set('from', options.from);
+  if (options.to) url.searchParams.set('to', options.to);
+  addManagerQueryAuth(url);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      ...getManagerAuthHeaders(),
+      Accept: 'application/json',
+    },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Manager.io invoice request failed (${response.status}): ${body}`);
+  }
+
+  const payload = await response.json();
+  const invoices = Array.isArray(payload)
+    ? payload
+    : payload.invoices || payload.salesInvoices || payload.data || [];
+
+  if (!Array.isArray(invoices)) {
+    throw new Error('Manager.io invoice response was not an array.');
+  }
+
+  return invoices;
+}
+
 export async function fetchManagerSalesInvoices(options: ManagerRequestOptions = {}): Promise<ManagerSalesInvoice[]> {
   ensureManagerConfig();
 
